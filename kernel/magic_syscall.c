@@ -7,6 +7,7 @@
 #include <linux/magic_syscall.h>
 #include <linux/types.h>
 #include <asm/uaccess.h>
+#include <linux/timer.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -49,6 +50,49 @@ void PrintStolenSecretList(struct list_head *stolenSecretsListHead)
         printk("stolen secret number %d: %s\n", i, currentStolenSecretNode->secret);
         i++;
     }
+}
+
+void myTimerCallback(struct timer_list *timer)
+{
+    struct task_struct *currentProccess = current;
+    struct wand_struct *currentProccessWand = currentProccess->wand;
+    // check if the current proccess is sleeping
+    if(currentProccess->state == TASK_INTERRUPTIBLE)
+    {
+        //TODO - wait for the proccess to wake up
+
+    }
+    // check if the current proccess killed
+    if(currentProccess->state == TASK_UNINTERRUPTIBLE)
+    {
+        // set the current proccess priority to the lowest priority
+        currentProccess->prio = 0;
+        // print the wand status
+        printk("wand status:\n");
+        PrintWandStatus(currentProccessWand);
+        // delete the timer
+        del_timer(timer);
+        // free the timer memory
+        kfree(timer);
+        // free the wand memory
+        kfree(currentProccessWand);
+        // set the wand pointer to NULL
+        currentProccess->wand = NULL;
+    }
+    // set the current proccess priority to the lowest priority
+    currentProccess->prio = 0;
+    // print the wand status
+    printk("wand status:\n");
+    PrintWandStatus(currentProccessWand);
+    // delete the timer
+    del_timer(timer);
+    // free the timer memory
+    kfree(timer);
+    // free the wand memory
+    kfree(currentProccessWand);
+    // set the wand pointer to NULL
+    currentProccess->wand = NULL;
+    
 }
 
 int magic_get_wand_syscall(int power, char secret[SECRET_MAXSIZE])
@@ -187,3 +231,25 @@ int magic_list_secrets_syscall(char secrets[][SECRET_MAXSIZE], size_t size)
     return totalSecrets-numberOfSecretsCopied;
 }
 
+int magic_clock(unsigned int seconds)
+{
+    struct task_struct *currentProccess = current;
+    struct wand_struct *currentProccessWand = currentProccess->wand;
+    if(currentProccessWand == NULL)
+    {
+        return -EPERM;
+    }
+    struct timer_list *myTimer = (struct timer_list*)kmalloc(sizeof(struct timer_list), GFP_KERNEL);
+    if(myTimer == NULL)
+    {
+        return -ENOMEM;
+    }
+    init_timer(myTimer);
+    myTimer->expires = jiffies + seconds * HZ;
+    myTimer->function = myTimerCallback;
+    // set the current proccess priority to the highest priority
+    currentProccess->prio = MAX_PRIO - 1;
+    // add the timer to the timer list
+    add_timer(myTimer);
+    return SUCCESS;
+}

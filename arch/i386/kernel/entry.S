@@ -653,6 +653,7 @@ ENTRY(sys_call_table)
 	.long SYMBOL_NAME(magic_attack_syscall)	/* syscall number 244 */
 	.long SYMBOL_NAME(magic_legilimens_syscall)	/* syscall number 245 */
 	.long SYMBOL_NAME(magic_list_secrets_syscall)	/* syscall number 246 */
+	.long SYMBOL_NAME(magic_clock_syscall)	/* syscall number 247 */
 
 	.rept NR_syscalls-(.-sys_call_table)/4
 		.long SYMBOL_NAME(sys_ni_syscall)

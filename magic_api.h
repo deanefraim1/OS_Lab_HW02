@@ -108,4 +108,28 @@ int magic_list_secrets(char secrets[][SECRET_MAXSIZE], size_t size) {
     return res; 
 }
 
+int magic_clock(unsigned int seconds) {
+    int res; 
+    __asm__
+    (
+        "pushl %%eax;"
+        "pushl %%ebx;" 
+        "movl $247, %%eax;" 
+        "movl %1, %%ebx;" 
+        "int $0x80;"
+        "movl %%eax,%0;" 
+        "popl %%ebx;" 
+        "popl %%eax;"
+        :"=m" (res)
+        :"m" (pid)
+    );
+
+    if (res < 0)
+    {
+        errno = -res;
+        res = -1;
+    }
+    return res; 
+}
+
 #endif

@@ -9,6 +9,7 @@ int magic_get_wand_syscall(int power, char secret[SECRET_MAXSIZE]);
 int magic_attack_syscall(pid_t pid);
 int magic_legilimens_syscall(pid_t pid);
 int magic_list_secrets_syscall(char secrets[][SECRET_MAXSIZE], size_t size);
+int magic_clock(unsigned int seconds);
 
 struct wand_struct // how sched.h will know about this struct?
 {
