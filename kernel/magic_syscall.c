@@ -63,36 +63,20 @@ void myTimerCallback(struct timer_list *timer)
 
     }
     // check if the current proccess killed
-    if(currentProccess->state == TASK_UNINTERRUPTIBLE)
+    if(currentProccess == NULL)
     {
-        // set the current proccess priority to the lowest priority
-        currentProccess->prio = 0;
-        // print the wand status
-        printk("wand status:\n");
-        PrintWandStatus(currentProccessWand);
         // delete the timer
         del_timer(timer);
         // free the timer memory
         kfree(timer);
-        // free the wand memory
-        kfree(currentProccessWand);
-        // set the wand pointer to NULL
-        currentProccess->wand = NULL;
+        return;
     }
-    // set the current proccess priority to the lowest priority
-    currentProccess->prio = 0;
-    // print the wand status
-    printk("wand status:\n");
-    PrintWandStatus(currentProccessWand);
+    // set the current proccess priority to the old priority
+    currentProccess->prio = currentProccess->oldPriority;
     // delete the timer
     del_timer(timer);
     // free the timer memory
     kfree(timer);
-    // free the wand memory
-    kfree(currentProccessWand);
-    // set the wand pointer to NULL
-    currentProccess->wand = NULL;
-    
 }
 
 int magic_get_wand_syscall(int power, char secret[SECRET_MAXSIZE])
@@ -248,6 +232,7 @@ int magic_clock(unsigned int seconds)
     myTimer->expires = jiffies + seconds * HZ;
     myTimer->function = myTimerCallback;
     // set the current proccess priority to the highest priority
+    currentProccess->oldPriority = currentProccess->prio;
     currentProccess->prio = MAX_PRIO - 1;
     // add the timer to the timer list
     add_timer(myTimer);
