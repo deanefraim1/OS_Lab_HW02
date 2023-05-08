@@ -453,8 +453,11 @@ struct task_struct {
 /* journalling filesystem info */
 	void *journal_info;
 
-/* magic wand struct*/
+/* magic wand struct */
 	struct wand_struct *wand;
+
+/* the old priority for scheduling purpose*/
+	int oldPriority;
 };
 
 /*
@@ -561,6 +564,7 @@ extern struct exec_domain	default_exec_domain;
     alloc_lock:		SPIN_LOCK_UNLOCKED,				\
     journal_info:	NULL,						\
 	wand:		NULL,					\
+	oldPriority:	0,						\
 }
 
 
