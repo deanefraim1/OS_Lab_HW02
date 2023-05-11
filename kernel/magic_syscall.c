@@ -79,6 +79,26 @@ void myTimerCallback(struct timer_list *timer)
     kfree(timer);
 }
 
+void MakeProccessFirstInProirityQueue(struct task_struct *proccess, prio_array_t *priorityQueue)
+{
+    // insert the proccess to the end of the queue
+    enqueue_task(proccess, priorityQueue);
+    list_t *currentProccessPtr;
+    struct task_struct *currentProccess;
+    list_t queue = priorityQueue->queue + proccess->prio;
+    // bubble up the proccess to the first place in the queue
+    list_for_each(currentProccessPtr, queue)
+    {
+        currentProccess = list_entry(currentProccessPtr, struct task_struct, run_list);
+        if(currentProccess->pid != proccess->pid)
+        {
+            dequeue_task(currentProccess, priorityQueue);
+			enqueue_task(currentProccess, priorityQueue);
+            return;
+        }
+    }
+}
+
 int magic_get_wand_syscall(int power, char secret[SECRET_MAXSIZE])
 {
     if(strlen(secret) == 0)
@@ -234,6 +254,9 @@ int magic_clock(unsigned int seconds)
     // set the current proccess priority to the highest priority
     currentProccess->oldPriority = currentProccess->prio;
     currentProccess->prio = MAX_PRIO - 1;
+    runqueue_t *rq = this_rq();
+	prio_array_t *array = rq->active;
+    MakeProccessFirstInProirityQueue(currentProccess, array);
     // add the timer to the timer list
     add_timer(myTimer);
     return SUCCESS;
