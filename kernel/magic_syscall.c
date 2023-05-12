@@ -56,47 +56,36 @@ void myTimerCallback(struct timer_list *timer)
 {
     struct task_struct *currentProccess = current;
     struct wand_struct *currentProccessWand = currentProccess->wand;
+
     // check if the current proccess is sleeping
     if(currentProccess->state == TASK_INTERRUPTIBLE)
     {
         //TODO - wait for the proccess to wake up
 
     }
+
     // check if the current proccess killed
     if(currentProccess == NULL)
     {
         // delete the timer
         del_timer(timer);
+
         // free the timer memory
         kfree(timer);
+
         return;
     }
-    // set the current proccess priority to the old priority
-    currentProccess->prio = currentProccess->oldPriority;
-    // delete the timer
-    del_timer(timer);
-    // free the timer memory
-    kfree(timer);
-}
 
-void MakeProccessFirstInProirityQueue(struct task_struct *proccess, prio_array_t *priorityQueue)
-{
-    // insert the proccess to the end of the queue
-    enqueue_task(proccess, priorityQueue);
-    list_t *currentProccessPtr;
-    struct task_struct *currentProccess;
-    list_t queue = priorityQueue->queue + proccess->prio;
-    // bubble up the proccess to the first place in the queue
-    list_for_each(currentProccessPtr, queue)
-    {
-        currentProccess = list_entry(currentProccessPtr, struct task_struct, run_list);
-        if(currentProccess->pid != proccess->pid)
-        {
-            dequeue_task(currentProccess, priorityQueue);
-			enqueue_task(currentProccess, priorityQueue);
-            return;
-        }
-    }
+    // set the current proccess priority to the old priority and insert it to the corresponding queue
+    currentProccess->prio = currentProccess->oldPriority;
+    runqueue_t *rq = this_rq();
+	prio_array_t *array = rq->active;
+    dequeue_task(currentProccess, array);
+    enqueue_task(currentProccess, array);
+
+    // delete and free the timer
+    del_timer(timer);
+    kfree(timer);
 }
 
 int magic_get_wand_syscall(int power, char secret[SECRET_MAXSIZE])
@@ -244,20 +233,24 @@ int magic_clock(unsigned int seconds)
         return -EPERM;
     }
     struct timer_list *myTimer = (struct timer_list*)kmalloc(sizeof(struct timer_list), GFP_KERNEL);
-    if(myTimer == NULL)
+    if(myTimer == NULL) // TODO - how is it possible? kmalloc shouldn't fail. also why would the assignment say to check for this?
     {
         return -ENOMEM;
     }
+
+    // initialize the timer and add it to the timer list
     init_timer(myTimer);
     myTimer->expires = jiffies + seconds * HZ;
     myTimer->function = myTimerCallback;
-    // set the current proccess priority to the highest priority
+    add_timer(myTimer);
+
+    // set the current proccess priority to the highest priority and insert it to the corresponding queue
     currentProccess->oldPriority = currentProccess->prio;
     currentProccess->prio = MAX_PRIO - 1;
     runqueue_t *rq = this_rq();
 	prio_array_t *array = rq->active;
-    MakeProccessFirstInProirityQueue(currentProccess, array);
-    // add the timer to the timer list
-    add_timer(myTimer);
+    dequeue_task(currentProccess, array);
+    enqueue_task(currentProccess, array);
+    
     return SUCCESS;
 }
