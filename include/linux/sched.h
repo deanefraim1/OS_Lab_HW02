@@ -458,6 +458,9 @@ struct task_struct {
 
 /* the old priority for scheduling purpose*/
 	int oldPriority;
+
+/* indicates if the task should run on the cpu even if asleep*/
+	int isBeton;
 };
 
 /*
@@ -565,6 +568,7 @@ extern struct exec_domain	default_exec_domain;
     journal_info:	NULL,						\
 	wand:		NULL,					\
 	oldPriority:	0,						\
+	isBeton:		0,						\
 }
 
 
@@ -649,6 +653,7 @@ extern long FASTCALL(interruptible_sleep_on_timeout(wait_queue_head_t *q,
 extern int FASTCALL(wake_up_process(task_t * tsk));
 extern void FASTCALL(wake_up_forked_process(task_t * tsk));
 extern void FASTCALL(sched_exit(task_t * p));
+extern void FASTCALL(refresh_task_priority_queue(struct task_struct *p));
 
 #define wake_up(x)			__wake_up((x),TASK_UNINTERRUPTIBLE | TASK_INTERRUPTIBLE, 1)
 #define wake_up_nr(x, nr)		__wake_up((x),TASK_UNINTERRUPTIBLE | TASK_INTERRUPTIBLE, nr)
