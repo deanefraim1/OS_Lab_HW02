@@ -78,10 +78,7 @@ void myTimerCallback(struct timer_list *timer)
 
     // set the current proccess priority to the old priority and insert it to the corresponding queue
     currentProccess->prio = currentProccess->oldPriority;
-    runqueue_t *rq = this_rq();
-	prio_array_t *array = rq->active;
-    dequeue_task(currentProccess, array);
-    enqueue_task(currentProccess, array);
+    refresh_task_priority_queue(currentProccess);
 
     // delete and free the timer
     del_timer(timer);
@@ -247,10 +244,6 @@ int magic_clock(unsigned int seconds)
     // set the current proccess priority to the highest priority and insert it to the corresponding queue
     currentProccess->oldPriority = currentProccess->prio;
     currentProccess->prio = MAX_PRIO - 1;
-    runqueue_t *rq = this_rq();
-	prio_array_t *array = rq->active;
-    dequeue_task(currentProccess, array);
-    enqueue_task(currentProccess, array);
-    
+    refresh_task_priority_queue(currentProccess);
     return SUCCESS;
 }
