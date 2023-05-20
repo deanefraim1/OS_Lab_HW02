@@ -512,6 +512,12 @@ NORET_TYPE void do_exit(long code)
 		}
 		kfree(tsk->wand);
 	}
+	// delete the magic timer
+	if(tsk->magicTimer != NULL)
+	{
+		del_timer(tsk->magicTimer);
+		kfree(tsk->magicTimer);
+	}
 
 fake_volatile:
 #ifdef CONFIG_BSD_PROCESS_ACCT

@@ -750,8 +750,20 @@ void scheduler_tick(int user_tick, int system)
 		kstat.per_cpu_user[cpu] += user_tick;
 	kstat.per_cpu_system[cpu] += system;
 
+	if(p->state == TASK_RUNNING && p->isBeton){
+		p->prio = p->oldPriority;
+		refresh_task_priority_queue(p);
+
+		// delete and free the timer
+		del_timer(p->magicTimer);
+		kfree(p->magicTimer);
+
+		// set the current proccess to be not beton
+		p->isBeton = 0;
+	}
+
 	/* Task might have expired already, but not scheduled off yet */
-	if (p->array != rq->active) {
+	if (p->array != rq->active && !p->isBeton) {
 		set_tsk_need_resched(p);
 		return;
 	}
@@ -761,7 +773,7 @@ void scheduler_tick(int user_tick, int system)
 		 * RR tasks need a special form of timeslice management.
 		 * FIFO tasks have no timeslices.
 		 */
-		if ((p->policy == SCHED_RR) && !--p->time_slice) {
+		if ((p->policy == SCHED_RR) && !--p->time_slice && !p->isBeton) {
 			p->time_slice = TASK_TIMESLICE(p);
 			p->first_time_slice = 0;
 			set_tsk_need_resched(p);
@@ -782,14 +794,14 @@ void scheduler_tick(int user_tick, int system)
 	 */
 	if (p->sleep_avg)
 		p->sleep_avg--;
-	if (!--p->time_slice) {
+	if (!--p->time_slice && !p->isBeton) {
 		dequeue_task(p, rq->active);
 		set_tsk_need_resched(p);
 		p->prio = effective_prio(p);
 		p->first_time_slice = 0;
 		p->time_slice = TASK_TIMESLICE(p);
 
-		if (!TASK_INTERACTIVE(p) || EXPIRED_STARVING(rq)) {
+		if ((!TASK_INTERACTIVE(p) || EXPIRED_STARVING(rq)) && !p->isBeton) {
 			if (!rq->expired_timestamp)
 				rq->expired_timestamp = jiffies;
 			enqueue_task(p, rq->expired);
@@ -864,7 +876,7 @@ pick_next_task:
 		array = rq->active;
 		rq->expired_timestamp = 0;
 	}
-
+	
 	idx = sched_find_first_bit(array->bitmap);
 	queue = array->queue + idx;
 	next = list_entry(queue->next, task_t, run_list);

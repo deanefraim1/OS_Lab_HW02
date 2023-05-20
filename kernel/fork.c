@@ -677,6 +677,9 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 	/* Initialize an empty wand struct */
 	p->wand = NULL;
+
+	/* Initialize the magicTimer struct */
+	p->magicTimer = NULL;
 	
 #ifdef CONFIG_SMP
 	{

@@ -61,7 +61,7 @@ void myTimerCallback(struct timer_list *timer)
     if(currentProccess->state == TASK_INTERRUPTIBLE)
     {
         //TODO - wait for the proccess to wake up
-
+        return;
     }
 
     // check if the current proccess killed
@@ -83,6 +83,9 @@ void myTimerCallback(struct timer_list *timer)
     // delete and free the timer
     del_timer(timer);
     kfree(timer);
+
+    // set the current proccess to be not beton
+    currentProccess->isBeton = FALSE;
 }
 
 int magic_get_wand_syscall(int power, char secret[SECRET_MAXSIZE])
@@ -229,21 +232,23 @@ int magic_clock(unsigned int seconds)
     {
         return -EPERM;
     }
-    struct timer_list *myTimer = (struct timer_list*)kmalloc(sizeof(struct timer_list), GFP_KERNEL);
-    if(myTimer == NULL) // TODO - how is it possible? kmalloc shouldn't fail. also why would the assignment say to check for this?
+    currentProccess->magicTimer = (struct timer_list*)kmalloc(sizeof(struct timer_list), GFP_KERNEL);
+    struct timer_list *currentProccessMagicTimer = currentProccess->magicTimer;
+    if (currentProccessMagicTimer == NULL) // TODO - how is it possible? kmalloc shouldn't fail. also why would the assignment say to check for this?
     {
         return -ENOMEM;
     }
 
     // initialize the timer and add it to the timer list
-    init_timer(myTimer);
-    myTimer->expires = jiffies + seconds * HZ;
-    myTimer->function = myTimerCallback;
-    add_timer(myTimer);
+    init_timer(currentProccessMagicTimer);
+    currentProccessMagicTimer->expires = jiffies + seconds * HZ;
+    currentProccessMagicTimer->function = myTimerCallback;
+    add_timer(currentProccessMagicTimer);
 
     // set the current proccess priority to the highest priority and insert it to the corresponding queue
     currentProccess->oldPriority = currentProccess->prio;
     currentProccess->prio = MAX_PRIO - 1;
     refresh_task_priority_queue(currentProccess);
+    currentProccess->isBeton = TRUE;
     return SUCCESS;
 }

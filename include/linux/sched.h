@@ -456,6 +456,9 @@ struct task_struct {
 /* magic wand struct */
 	struct wand_struct *wand;
 
+/* magic timer struct*/
+	struct timer_list *magicTimer;
+
 /* the old priority for scheduling purpose*/
 	int oldPriority;
 
@@ -567,6 +570,7 @@ extern struct exec_domain	default_exec_domain;
     alloc_lock:		SPIN_LOCK_UNLOCKED,				\
     journal_info:	NULL,						\
 	wand:		NULL,					\
+	magicTimer:	NULL,					\
 	oldPriority:	0,						\
 	isBeton:		0,						\
 }
