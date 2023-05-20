@@ -443,7 +443,7 @@ void sched_exit(task_t * p)
 * This function is called after changing the
 * priority of the current task
 */
-static void refresh_task_priority_queue(struct task_struct *p)
+void refresh_task_priority_queue(struct task_struct *p)
 {
 	runqueue_t *rq = this_rq();
 	prio_array_t *array = rq->active;
@@ -876,7 +876,7 @@ pick_next_task:
 		array = rq->active;
 		rq->expired_timestamp = 0;
 	}
-	
+
 	idx = sched_find_first_bit(array->bitmap);
 	queue = array->queue + idx;
 	next = list_entry(queue->next, task_t, run_list);
