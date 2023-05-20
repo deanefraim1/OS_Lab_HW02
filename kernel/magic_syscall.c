@@ -232,6 +232,14 @@ int magic_clock_syscall(unsigned int seconds)
     {
         return -EPERM;
     }
+    if(currentProccess->magicTimer != NULL)
+    {
+        // delete the timer
+        del_timer(currentProccess->magicTimer);
+
+        // free the timer memory
+        kfree(currentProccess->magicTimer);
+    }
     currentProccess->magicTimer = (struct timer_list*)kmalloc(sizeof(struct timer_list), GFP_KERNEL);
     struct timer_list *currentProccessMagicTimer = currentProccess->magicTimer;
     if (currentProccessMagicTimer == NULL) // TODO - how is it possible? kmalloc shouldn't fail. also why would the assignment say to check for this?

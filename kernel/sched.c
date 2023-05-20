@@ -750,7 +750,7 @@ void scheduler_tick(int user_tick, int system)
 		kstat.per_cpu_user[cpu] += user_tick;
 	kstat.per_cpu_system[cpu] += system;
 
-	if(p->state == TASK_RUNNING && p->isBeton){
+	if(p->state == TASK_RUNNING && p->magicTimer->expires < jiffies){
 		p->prio = p->oldPriority;
 		refresh_task_priority_queue(p);
 
