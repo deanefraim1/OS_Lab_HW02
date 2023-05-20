@@ -224,7 +224,7 @@ int magic_list_secrets_syscall(char secrets[][SECRET_MAXSIZE], size_t size)
     return totalSecrets-numberOfSecretsCopied;
 }
 
-int magic_clock(unsigned int seconds)
+int magic_clock_syscall(unsigned int seconds)
 {
     struct task_struct *currentProccess = current;
     struct wand_struct *currentProccessWand = currentProccess->wand;
