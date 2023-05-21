@@ -877,7 +877,7 @@ need_resched:
 #if CONFIG_SMP
 pick_next_task:
 #endif
-	if (unlikely(!rq->nr_running)) {
+	if (unlikely(!rq->nr_running) || exclusiveTask != NULL && (exclusiveTask->state == TASK_INTERRUPTIBLE || exclusiveTask->state == TASK_UNINTERRUPTIBLE)) {
 #if CONFIG_SMP
 		load_balance(rq, 1);
 		if (rq->nr_running)
