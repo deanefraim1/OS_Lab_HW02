@@ -227,12 +227,12 @@ int magic_clock_syscall(unsigned int seconds)
     // initialize the timer and add it to the timer list
     init_timer(currentProccessMagicTimer);
     currentProccessMagicTimer->expires = jiffies + seconds * HZ;
-    currentProccessMagicTimer->function = magicTimerCallback;
+    currentProccessMagicTimer->function = MagicTimerCallback;
     add_timer(currentProccessMagicTimer);
 
     SaveTaskAsExclusive(currentProccess);
 
     // set the current proccess priority to the highest priority and insert it to the corresponding queue
-    refresh_task_priority_queue(currentProccess, 0);
+    RefreshTaskPriorityQueue(currentProccess, 0);
     return SUCCESS;
 }

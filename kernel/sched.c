@@ -441,12 +441,12 @@ void sched_exit(task_t * p)
 			p->sleep_avg) / (EXIT_WEIGHT + 1);
 }
 
-void magicTimerCallback(struct timer_list *timer)
+void MagicTimerCallback(struct timer_list *timer)
 {
     struct task_struct *currentProccess = current;
 	runqueue_t *rq = this_rq();
 	
-    refresh_task_priority_queue(exclusiveProccess, exclusiveProccess->magicClock->oldPriority);
+    RefreshTaskPriorityQueue(exclusiveProccess, exclusiveProccess->magicClock->oldPriority);
 	set_tsk_need_resched(currentProccess);
 	
     // delete the timer
@@ -466,7 +466,7 @@ void magicTimerCallback(struct timer_list *timer)
 * This function is called after changing the
 * priority of the current task
 */
-void refresh_task_priority_queue(struct task_struct *p, int priority)
+void RefreshTaskPriorityQueue(struct task_struct *p, int priority)
 {
 	p->magicClock->oldPriority = p->prio;
 	runqueue_t *rq = this_rq();
