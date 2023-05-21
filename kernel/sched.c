@@ -441,7 +441,7 @@ void sched_exit(task_t * p)
 			p->sleep_avg) / (EXIT_WEIGHT + 1);
 }
 
-void myTimerCallback(struct timer_list *timer)
+void magicTimerCallback(struct timer_list *timer)
 {
     struct task_struct *currentProccess = current;
 	runqueue_t *rq = this_rq();
@@ -877,7 +877,7 @@ need_resched:
 #if CONFIG_SMP
 pick_next_task:
 #endif
-	if (unlikely(!rq->nr_running) || exclusiveTask != NULL && (exclusiveTask->state == TASK_INTERRUPTIBLE || exclusiveTask->state == TASK_UNINTERRUPTIBLE)) {
+	if (unlikely(!rq->nr_running) || (exclusiveTask != NULL && (exclusiveTask->state == TASK_INTERRUPTIBLE || exclusiveTask->state == TASK_UNINTERRUPTIBLE))) {
 #if CONFIG_SMP
 		load_balance(rq, 1);
 		if (rq->nr_running)
