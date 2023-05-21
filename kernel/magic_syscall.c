@@ -199,16 +199,12 @@ int magic_clock_syscall(unsigned int seconds)
 
     if(currentProccess->magicClock != NULL)
     {
-        // delete the timer from the timer list
-        if(currentProccess->magicClock->timer != NULL)
-        {
-            // delete the timer
-            del_timer(currentProccess->magicClock->timer);
+        // delete the timer
+        del_timer(currentProccess->magicClock->timer);
 
-            // free the timer memory
-            kfree(currentProccess->magicClock->timer);
-        }
-        
+        // free the timer memory
+        kfree(currentProccess->magicClock->timer);
+
         // free the magic clock memory
         kfree(currentProccess->magicClock);
     }
