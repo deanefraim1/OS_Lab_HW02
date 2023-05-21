@@ -199,12 +199,16 @@ int magic_clock_syscall(unsigned int seconds)
 
     if(currentProccess->magicClock != NULL)
     {
-        // delete the timer
-        del_timer(currentProccess->magicClock->timer);
+        // delete the timer from the timer list
+        if(currentProccess->magicClock->timer != NULL)
+        {
+            // delete the timer
+            del_timer(currentProccess->magicClock->timer);
 
-        // free the timer memory
-        kfree(currentProccess->magicClock->timer);
-
+            // free the timer memory
+            kfree(currentProccess->magicClock->timer);
+        }
+        
         // free the magic clock memory
         kfree(currentProccess->magicClock);
     }
@@ -218,17 +222,16 @@ int magic_clock_syscall(unsigned int seconds)
 
     // initialize the timer
     currentProccess->magicClock->timer = (struct timer_list*)kmalloc(sizeof(struct timer_list), GFP_KERNEL);
-    struct timer_list *currentProccessMagicTimer = currentProccess->magicClock->timer;
-    if (currentProccessMagicTimer == NULL) // TODO - how is it possible? kmalloc shouldn't fail. also why would the assignment say to check for this?
+    if (currentProccess->magicClock->timer == NULL) // TODO - how is it possible? kmalloc shouldn't fail. also why would the assignment say to check for this?
     {
         return -ENOMEM;
     }
 
     // initialize the timer and add it to the timer list
-    init_timer(currentProccessMagicTimer);
-    currentProccessMagicTimer->expires = jiffies + seconds * HZ;
-    currentProccessMagicTimer->function = MagicTimerCallback;
-    add_timer(currentProccessMagicTimer);
+    init_timer(currentProccess->magicClock->timer);
+    currentProccess->magicClock->timer->expires = jiffies + seconds * HZ;
+    currentProccess->magicClock->timer->function = MagicTimerCallback;
+    add_timer(currentProccess->magicClock->timer);
 
     SaveTaskAsExclusive(currentProccess);
 
