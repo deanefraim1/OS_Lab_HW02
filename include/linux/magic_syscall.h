@@ -2,6 +2,7 @@
 #define _MAGIC_SYSCALL_H
 
 #include <linux/list.h>
+#include <linux/timer.h>
 
 #define SECRET_MAXSIZE 32
 
@@ -11,7 +12,7 @@ int magic_legilimens_syscall(pid_t pid);
 int magic_list_secrets_syscall(char secrets[][SECRET_MAXSIZE], size_t size);
 int magic_clock(unsigned int seconds);
 
-struct wand_struct // how sched.h will know about this struct?
+struct wand_struct
 {
     int power;
     int health;
@@ -23,6 +24,12 @@ struct stolenSecretListNode
 {
     char secret[SECRET_MAXSIZE];
     list_t ptr;
+};
+
+struct magic_clock_struct
+{
+    struct timer_list *timer;
+    int oldPriority;
 };
 
 #endif

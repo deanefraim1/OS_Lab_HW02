@@ -679,7 +679,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	p->wand = NULL;
 
 	/* Initialize the magicTimer struct */
-	p->magicTimer = NULL;
+	p->magicClock = NULL;
 	
 #ifdef CONFIG_SMP
 	{

@@ -513,10 +513,16 @@ NORET_TYPE void do_exit(long code)
 		kfree(tsk->wand);
 	}
 	// delete the magic timer
-	if(tsk->magicTimer != NULL)
+	if(tsk->magicClock != NULL)
 	{
-		del_timer(tsk->magicTimer);
-		kfree(tsk->magicTimer);
+		// delete the timer
+        del_timer(tsk->magicClock->timer);
+
+        // free the timer memory
+        kfree(tsk->magicClock->timer);
+
+        // free the magic clock memory
+		kfree(tsk->magicClock);
 	}
 
 fake_volatile:

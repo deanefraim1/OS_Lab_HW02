@@ -118,6 +118,8 @@
 
 #define BITMAP_SIZE ((((MAX_PRIO+1+7)/8)+sizeof(long)-1)/sizeof(long))
 
+struct task_struct *exclusiveTask;
+
 typedef struct runqueue runqueue_t;
 
 struct prio_array {
@@ -439,16 +441,48 @@ void sched_exit(task_t * p)
 			p->sleep_avg) / (EXIT_WEIGHT + 1);
 }
 
+void myTimerCallback(struct timer_list *timer)
+{
+    struct task_struct *currentProccess = current;
+	runqueue_t *rq = this_rq();
+	struct task_struct *exclusiveProccess = exclusiveTask;
+	
+    refresh_task_priority_queue(exclusiveProccess, exclusiveProccess->magicClock->oldPriority);
+	set_tsk_need_resched(currentProccess);
+	
+    // delete the timer
+	del_timer(currentProccess->magicClock->timer);
+
+	// free the timer memory
+	kfree(currentProccess->magicClock->timer);
+
+	// free the magic clock memory
+	kfree(currentProccess->magicClock);
+}
+
 /*
 * This function is called after changing the
 * priority of the current task
 */
-void refresh_task_priority_queue(struct task_struct *p)
+void refresh_task_priority_queue(struct task_struct *p, int priority)
 {
+	p->magicClock->oldPriority = p->prio;
 	runqueue_t *rq = this_rq();
 	prio_array_t *array = rq->active;
-    dequeue_task(p, array);
-    enqueue_task(p, array);
+	if(p->state == TASK_RUNNING)
+	{
+		dequeue_task(p, array);
+	}
+	p->prio = priority;
+	if(p->state == TASK_RUNNING)
+	{
+		enqueue_task(p, array);
+	}
+}
+
+void SaveTaskAsExclusive(struct task_struct *p)
+{
+	exclusiveTask = p;
 }
 
 #if CONFIG_SMP
@@ -750,20 +784,8 @@ void scheduler_tick(int user_tick, int system)
 		kstat.per_cpu_user[cpu] += user_tick;
 	kstat.per_cpu_system[cpu] += system;
 
-	if(p->state == TASK_RUNNING && p->magicTimer->expires < jiffies){
-		p->prio = p->oldPriority;
-		refresh_task_priority_queue(p);
-
-		// delete and free the timer
-		del_timer(p->magicTimer);
-		kfree(p->magicTimer);
-
-		// set the current proccess to be not beton
-		p->isBeton = 0;
-	}
-
 	/* Task might have expired already, but not scheduled off yet */
-	if (p->array != rq->active && !p->isBeton) {
+	if (p->array != rq->active) {
 		set_tsk_need_resched(p);
 		return;
 	}
@@ -773,7 +795,7 @@ void scheduler_tick(int user_tick, int system)
 		 * RR tasks need a special form of timeslice management.
 		 * FIFO tasks have no timeslices.
 		 */
-		if ((p->policy == SCHED_RR) && !--p->time_slice && !p->isBeton) {
+		if ((p->policy == SCHED_RR) && !--p->time_slice) {
 			p->time_slice = TASK_TIMESLICE(p);
 			p->first_time_slice = 0;
 			set_tsk_need_resched(p);
@@ -794,14 +816,14 @@ void scheduler_tick(int user_tick, int system)
 	 */
 	if (p->sleep_avg)
 		p->sleep_avg--;
-	if (!--p->time_slice && !p->isBeton) {
+	if (!--p->time_slice) {
 		dequeue_task(p, rq->active);
 		set_tsk_need_resched(p);
 		p->prio = effective_prio(p);
 		p->first_time_slice = 0;
 		p->time_slice = TASK_TIMESLICE(p);
 
-		if ((!TASK_INTERACTIVE(p) || EXPIRED_STARVING(rq)) && !p->isBeton) {
+		if (!TASK_INTERACTIVE(p) || EXPIRED_STARVING(rq)) {
 			if (!rq->expired_timestamp)
 				rq->expired_timestamp = jiffies;
 			enqueue_task(p, rq->expired);
