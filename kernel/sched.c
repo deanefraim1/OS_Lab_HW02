@@ -118,7 +118,7 @@
 
 #define BITMAP_SIZE ((((MAX_PRIO+1+7)/8)+sizeof(long)-1)/sizeof(long))
 
-struct task_struct *exclusiveTask;
+struct task_struct *exclusiveProccess;
 
 typedef struct runqueue runqueue_t;
 
@@ -445,19 +445,21 @@ void magicTimerCallback(struct timer_list *timer)
 {
     struct task_struct *currentProccess = current;
 	runqueue_t *rq = this_rq();
-	struct task_struct *exclusiveProccess = exclusiveTask;
 	
     refresh_task_priority_queue(exclusiveProccess, exclusiveProccess->magicClock->oldPriority);
 	set_tsk_need_resched(currentProccess);
 	
     // delete the timer
-	del_timer(currentProccess->magicClock->timer);
+	del_timer(exclusiveProccess->magicClock->timer);
 
 	// free the timer memory
-	kfree(currentProccess->magicClock->timer);
+	kfree(exclusiveProccess->magicClock->timer);
 
 	// free the magic clock memory
-	kfree(currentProccess->magicClock);
+	kfree(exclusiveProccess->magicClock);
+
+	// make the exclusive task null
+	exclusiveProccess = NULL;
 }
 
 /*
@@ -472,17 +474,19 @@ void refresh_task_priority_queue(struct task_struct *p, int priority)
 	if(p->state == TASK_RUNNING)
 	{
 		dequeue_task(p, array);
-	}
-	p->prio = priority;
-	if(p->state == TASK_RUNNING)
-	{
+		p->prio = priority;
 		enqueue_task(p, array);
+	}
+	// if the task is not running, just change the priority because hes not in the runqueue
+	else
+	{
+		p->prio = priority;
 	}
 }
 
 void SaveTaskAsExclusive(struct task_struct *p)
 {
-	exclusiveTask = p;
+	exclusiveProccess = p;
 }
 
 #if CONFIG_SMP
@@ -877,7 +881,7 @@ need_resched:
 #if CONFIG_SMP
 pick_next_task:
 #endif
-	if (unlikely(!rq->nr_running) || (exclusiveTask != NULL && (exclusiveTask->state == TASK_INTERRUPTIBLE || exclusiveTask->state == TASK_UNINTERRUPTIBLE))) {
+	if (unlikely(!rq->nr_running) || (exclusiveProccess != NULL && (exclusiveProccess->state == TASK_INTERRUPTIBLE || exclusiveProccess->state == TASK_UNINTERRUPTIBLE))) {
 #if CONFIG_SMP
 		load_balance(rq, 1);
 		if (rq->nr_running)
