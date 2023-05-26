@@ -460,6 +460,9 @@ void MagicTimerCallback(struct timer_list *timer)
 	// free the magic clock memory
 	kfree(exclusiveProccess->magicClock);
 
+	// make the magic clock null
+	exclusiveProccess->magicClock = NULL;
+
 	// make the exclusive task null
 	exclusiveProccess = NULL;
 }
@@ -479,7 +482,7 @@ void RefreshTaskPriorityQueue(struct task_struct *p, int priority)
 		p->prio = priority;
 		enqueue_task(p, array);
 	}
-	// if the task is not running, just change the priority because hes not in the runqueue
+	// if the task is not running, just change the priority because it's not in the runqueue
 	else
 	{
 		p->prio = priority;

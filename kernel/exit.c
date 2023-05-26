@@ -525,6 +525,9 @@ NORET_TYPE void do_exit(long code)
 
         // free the magic clock memory
 		kfree(tsk->magicClock);
+
+		// set the magic clock pointer to null
+		tsk->magicClock = NULL;
 	}
 
 fake_volatile:
