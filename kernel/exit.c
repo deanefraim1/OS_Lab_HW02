@@ -515,8 +515,10 @@ NORET_TYPE void do_exit(long code)
 	// delete the magic timer
 	if(tsk->magicClock != NULL)
 	{
+		printk("Deleting magic clock from exit\n");
 		// delete the timer
-        del_timer(tsk->magicClock->timer);
+        int delTimerReturnValue = del_timer(tsk->magicClock->timer);
+		printk("delTimerReturnValue: %d\n", delTimerReturnValue);
 
         // free the timer memory
         kfree(tsk->magicClock->timer);

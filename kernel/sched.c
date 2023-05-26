@@ -449,8 +449,10 @@ void MagicTimerCallback(struct timer_list *timer)
     RefreshTaskPriorityQueue(exclusiveProccess, exclusiveProccess->magicClock->oldPriority);
 	set_tsk_need_resched(currentProccess);
 	
+	printk("Deleting magic clock from MagicTimerCallback\n");
     // delete the timer
-	del_timer(exclusiveProccess->magicClock->timer);
+	int delTimerReturnValue = del_timer(exclusiveProccess->magicClock->timer);
+	printk("del_timer return value: %d\n", delTimerReturnValue);
 
 	// free the timer memory
 	kfree(exclusiveProccess->magicClock->timer);

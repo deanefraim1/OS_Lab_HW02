@@ -199,8 +199,10 @@ int magic_clock_syscall(unsigned int seconds)
 
     if(currentProccess->magicClock != NULL)
     {
+        printk("Deleting magic clock from magic_clock_syscall\n");
         // delete the timer
-        del_timer(currentProccess->magicClock->timer);
+        int delTimerReturnValue = del_timer(currentProccess->magicClock->timer);
+        printk("del_timer return value: %d\n", delTimerReturnValue);
 
         // free the timer memory
         kfree(currentProccess->magicClock->timer);
@@ -210,6 +212,7 @@ int magic_clock_syscall(unsigned int seconds)
     }
 
     // initialize the magic clock
+    printk("Initializing magic clock from magic_clock_syscall\n");
     currentProccess->magicClock = (struct magic_clock_struct*)kmalloc(sizeof(struct magic_clock_struct), GFP_KERNEL);
     if (currentProccess->magicClock == NULL)
     {
