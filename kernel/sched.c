@@ -443,7 +443,19 @@ void sched_exit(task_t * p)
 
 void MagicTimerCallback(struct timer_list *timer)
 {
-    struct task_struct *currentProccess = current;
+	if(exclusiveProccess == NULL)
+	{
+		return;
+	}
+
+	if(exclusiveProccess->magicClock == NULL)
+	{
+		// make the exclusive task null
+		exclusiveProccess = NULL;
+		return;
+	}
+
+	struct task_struct *currentProccess = current;
 	runqueue_t *rq = this_rq();
 	
     RefreshTaskPriorityQueue(exclusiveProccess, exclusiveProccess->magicClock->oldPriority);
@@ -455,12 +467,11 @@ void MagicTimerCallback(struct timer_list *timer)
 	printk("del_timer return value: %d\n", delTimerReturnValue);
 
 	// free the timer memory and the magic clock memory and set the magic clock to null
-	if(exclusiveProccess->magicClock != NULL)
-	{
+	
 		kfree(exclusiveProccess->magicClock->timer);
 		kfree(exclusiveProccess->magicClock);
 		exclusiveProccess->magicClock = NULL;
-	}
+	
 
 	// make the exclusive task null
 	exclusiveProccess = NULL;
