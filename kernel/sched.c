@@ -469,12 +469,10 @@ void MagicTimerCallback(struct timer_list *timer)
 	printk("del_timer return value: %d\n", delTimerReturnValue);
 
 	// free the timer memory and the magic clock memory and set the magic clock to null
+	kfree(exclusiveProccess->magicClock->timer);
+	kfree(exclusiveProccess->magicClock);
+	exclusiveProccess->magicClock = NULL;
 	
-		kfree(exclusiveProccess->magicClock->timer);
-		kfree(exclusiveProccess->magicClock);
-		exclusiveProccess->magicClock = NULL;
-	
-
 	// make the exclusive task null
 	exclusiveProccess = NULL;
 }
