@@ -449,7 +449,7 @@ void MagicTimerCallback(struct timer_list *timer)
 		return;
 	}
 
-	// make sure that the exclusive task has a magic clock (should always be true but whatever)
+	// make sure that the exclusive task has a magic clock
 	if(exclusiveProccess->magicClock == NULL)
 	{
 		// make the exclusive task null
