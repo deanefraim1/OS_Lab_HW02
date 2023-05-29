@@ -528,6 +528,9 @@ NORET_TYPE void do_exit(long code)
 
 		// set the magic clock pointer to null
 		tsk->magicClock = NULL;
+
+		// set the exclusive task pointer to null
+		SaveTaskAsExclusive(NULL);
 	}
 
 fake_volatile:
