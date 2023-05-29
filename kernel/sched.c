@@ -443,11 +443,13 @@ void sched_exit(task_t * p)
 
 void MagicTimerCallback(struct timer_list *timer)
 {
+	// make sure that the exclusive task did not terminate
 	if(exclusiveProccess == NULL)
 	{
 		return;
 	}
 
+	// make sure that the exclusive task has a magic clock (should always be true but whatever)
 	if(exclusiveProccess->magicClock == NULL)
 	{
 		// make the exclusive task null
